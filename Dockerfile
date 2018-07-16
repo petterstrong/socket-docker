@@ -9,6 +9,7 @@ RUN npm install
 
 # Copy App
 COPY . /app
+EXPOSE 3019
 
 # Set Command
 CMD npm run dev

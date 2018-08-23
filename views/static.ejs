@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link href="https://cdn.bootcss.com/antd/3.5.4/antd.min.css" rel="stylesheet">
+  <!--<script src="https://cdn.bootcss.com/vue/2.5.17-beta.0/vue.min.js"></script>-->
+  <script src="https://cdn.bootcss.com/vue/2.5.17-beta.0/vue.js"></script>
+  <script src="https://cdn.bootcss.com/axios/0.18.0/axios.min.js"></script>
+  <script src="https://cdn.bootcss.com/clipboard.js/2.0.1/clipboard.min.js"></script>
+  <script src="https://cdn.bootcss.com/moment.js/2.22.1/moment.min.js"></script>
+  <title>静态文件上传界面</title>
+  <style>
+    body, #app {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    #app {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+    .upload-form {
+      padding: 3rem;
+      border-radius: 8px;
+      box-shadow: 0 0 5px 2px rgba(0,0,0,.15);
+    }
+    select.ant-select {
+      padding: 10px 3px;
+    }
+    label {
+      display: inline-block;
+      position: relative;
+      cursor: pointer;
+    }
+    .files{
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      opacity: 0;
+      -webkit-appearance: none;
+      z-index: 2;
+      cursor: pointer;
+    }
+    .history {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .history li {
+      margin-top: 6px;
+    }
+    .history a {
+      margin-right: 1rem;
+    }
+    .history .ant-btn + .ant-btn {
+      margin-left: .5rem;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <h2>页面上传</h2>
+  <form class="ant-form ant-form-inline upload-form">
+    <div class="ant-form-item-label"><label for="price" class="" title="Price">目标地区</label></div>
+    <div class="ant-row ant-form-item">
+      <div class="ant-form-item-control-wrapper">
+        <div class="ant-form-item-control">
+        <span class="ant-form-item-children">
+          <span class="ant-input-affix-wrapper">
+            <span class="ant-input-prefix">
+              <i class="anticon anticon-file-text" style="color: rgba(0, 0, 0, 0.25);"></i></span>
+            <select class="ant-select ant-select-selection" name="" id="" v-model="bucket">
+              <option value="gh-page">华南</option>
+              <option value="pages">华东</option>
+            </select>
+          </span>
+        </span>
+        </div>
+      </div>
+    </div>
+    <div class="ant-row ant-form-item">
+      <div class="ant-form-item-control-wrapper">
+        <div class="ant-form-item-control">
+          <span class="ant-form-item-children">
+            <span class="ant-input-affix-wrapper">
+              <span class="ant-input-prefix">
+                <i class="anticon anticon-file-text" style="color: rgba(0, 0, 0, 0.25);"></i>
+              </span>
+              <input type="text" placeholder="英文不带空格(非必须)" id="password" class="ant-input" v-model="path">
+            </span>
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="ant-row ant-form-item">
+      <div class="ant-form-item-control-wrapper">
+        <div class="ant-form-item-control">
+          <label>
+            <input class="files" type="file" @change="uploadFiles">
+            <button type="button" class="ant-btn ant-btn-primary ant-btn-circle ant-btn-icon-only">
+              <i class="anticon anticon-upload"></i>
+            </button>
+          </label>
+        </div>
+      </div>
+    </div>
+  </form>
+  <div class="history">
+    <h5>上传历史</h5>
+    <ul v-show="history.length">
+      <li v-for="(item, index) in history" :key="index">
+        <a :href="item.url" target="_blank">{{item.url}}</a>
+        <button class="ant-btn ant-btn-sm" @click="copyLink" id="link" :data-clipboard-text="item.url">复制链接</button>
+        <button class="ant-btn ant-btn-dashed ant-btn-sm ant-btn-danger" @click="deleteRecord">删除</button>
+        <span>{{formatTime(item.createdAt)}}</span>
+      </li>
+    </ul>
+  </div>
+  <div class="ant-message" v-show="showTip">
+    <span>
+      <div class="ant-message-notice">
+        <div class="ant-message-notice-content">
+          <div class="ant-message-custom-content ant-message-success">
+            <i class="anticon anticon-check-circle"></i>
+            <span>{{tip}}</span>
+          </div>
+        </div>
+      </div>
+    </span>
+  </div>
+</div>
+
+<script>
+  if (typeof window.Vue == undefined) {
+    alert('加载失败')
+  }
+  const vm = new Vue({
+    el: '#app',
+    data: function () {
+      return {
+        bucket: 'gh-page',
+        path: '',
+        tip: '',
+        showTip: false,
+        history: []
+      }
+    },
+    created () {
+      this.history = JSON.parse(localStorage.getItem('files')) || []
+    },
+    methods: {
+      uploadFiles (event) {
+        const form = new FormData()
+        form.append('avatar', event.target.files[0])
+        form.append('bucket', this.bucket)
+        axios.post('/upload/loader', form).then(data => {
+          if (data.status !== 200) {
+            this.$toast({showTip: true, tip: '上传失败'})
+            return
+          }
+          console.log(data)
+          this.$toast({showTip: true, tip: '上传成功'})
+          this.history.unshift(data.data)
+          localStorage.setItem('files', JSON.stringify(this.history))
+        })
+      },
+      copyLink () {
+        const clipboard = new ClipboardJS('#link')
+
+        clipboard.on('success', (e) => {
+          this.$toast({showTip: true, tip: '拷贝成功'})
+          e.clearSelection();
+        });
+
+        clipboard.on('error', (e) => {
+          this.$toast({showTip: true, tip: '拷贝失败'})
+          console.error('Action:', e.action);
+          console.error('Trigger:', e.trigger);
+        });
+      },
+      deleteRecord (index) {
+        this.history.splice(index, 1);
+        localStorage.setItem('files', JSON.stringify(this.history));
+      },
+      $toast ({showTip = true, tip = '提示信息'}) {
+        this.showTip = showTip
+        this.tip = tip
+        if (showTip) {
+          setTimeout(() => {
+            this.showTip = false
+          }, 2000)
+        }
+      },
+      formatTime (date) {
+        if (typeof window.moment === undefined || !date) {
+          return ''
+        }
+        return moment(date).format('MM月d日 HH:mm:ss')
+      }
+    }
+  })
+</script>
+</body>
+</html>

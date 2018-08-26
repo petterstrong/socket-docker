@@ -149,7 +149,8 @@
   </div>
 </div>
 <script>
-  var socket1 = io('http://localhost:3019/react')
+  var host = /localhost/.test(window.location.origin) ? 'http://localhost:3019' : window.location.origin 
+  var socket1 = io(`${host}/react`)
   socket1.on('connect', () => {
     console.log(socket1.id)
   })
@@ -161,7 +162,7 @@
     console.log('someone is typing')
   })
 
-  var socket2 = io('http://localhost:3019/vue', {
+  var socket2 = io(`${host}/vue`, {
     forceNew: true
   });
   socket2.on('receive', function (data) {

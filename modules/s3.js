@@ -44,7 +44,7 @@ export const listBuckets = () => {
 
 export const upload = (key, file) => {
   const uploadPromise = s3.putObject({Bucket: bucket, Body: file, Key: key}).promise()
-  uploadPromise.then(data => {
+  return uploadPromise.then(data => {
     console.log(data)
     return data
   })

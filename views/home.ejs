@@ -188,7 +188,6 @@
   }
   function uploadFiles() {
     const event = window.event
-    console.log(event)
     const form = new FormData()
     form.append('avatar',  event.target.files[0])
     axios.post('/upload/upload-s3', form).then(data => {

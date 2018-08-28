@@ -19,6 +19,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({storage}).single('avatar')
 
+
 router.get('/', (req, res) => {
   res.send({
     name: 123
@@ -58,6 +59,17 @@ router.post('/aws', async (req, res) => {
   try {
     const message = await aws.createAndUpload()
     res.send(message)
+  } catch (e) {
+    res.status(500).send(e.message || JSON.stringify(e))
+  }
+})
+
+router.post('/ipastbook', async (req, res) => {
+  try {
+    res.send({
+      error: 0,
+      message: '上传成功'
+    })
   } catch (e) {
     res.status(500).send(e.message || JSON.stringify(e))
   }

@@ -3,7 +3,7 @@ import uuid from 'uuid'
 
 const s3 = new AWS.S3()
 
-const bucket = 'node.buckets'
+const bucket = 'ipastbook-test'
 const keyName = 'hello_world.txt'
 
 export const createAndUpload = () => {
